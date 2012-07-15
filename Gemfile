@@ -2,3 +2,16 @@ source 'https://rubygems.org'
 
 # Specify your gem's dependencies in commotion.gemspec
 gemspec
+
+group :development, :test do
+  gem "guard-bundler"
+  gem "guard-rspec"
+  gem "rake"
+  gem "rb-fsevent"      # for guard
+  gem "rspec"
+  gem "ruby_gntp"       # for guard
+end
+
+group :test do
+  gem "simplecov",      require: false
+end
