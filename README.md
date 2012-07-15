@@ -1,6 +1,10 @@
 # Commotion
 
-TODO: Write a gem description
+Run multiple small tasks at once.
+
+## Usage
+
+TODO: Write usage instructions here
 
 ## Installation
 
@@ -15,10 +19,6 @@ And then execute:
 Or install it yourself as:
 
     $ gem install commotion
-
-## Usage
-
-TODO: Write usage instructions here
 
 ## Contributing
 
