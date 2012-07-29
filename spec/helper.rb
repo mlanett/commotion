@@ -6,6 +6,7 @@ SimpleCov.start                 # must be loaded before our own code
 require "commotion"             # load this gem
 require "active_record"
 require "commotion/test/active_record_helper"
+require "commotion/concurrent/thread_helpers" if ENV["TRACE"]
 
 RSpec.configure do |spec|
   include Commotion::Test::ActiveRecordHelper
