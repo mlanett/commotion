@@ -8,6 +8,11 @@ module Commotion
   autoload :Job,              "commotion/job"
   autoload :Scheduler,        "commotion/scheduler"
 
+  module Concurrent
+    autoload :BlockingQueue,  "commotion/concurrent/blocking_queue"
+    autoload :Stepper,        "commotion/concurrent/stepper"
+  end
+
   class << self
     def logger=(l)
       @logger = l
