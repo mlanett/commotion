@@ -10,6 +10,7 @@ module Commotion
 
   module Concurrent
     autoload :BlockingQueue,  "commotion/concurrent/blocking_queue"
+    autoload :HandoffQueue,   "commotion/concurrent/handoff_queue"
     autoload :Stepper,        "commotion/concurrent/stepper"
   end
 
