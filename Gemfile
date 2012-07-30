@@ -13,5 +13,6 @@ group :development, :test do
 end
 
 group :test do
+  gem "mysql2"
   gem "simplecov",      require: false
 end

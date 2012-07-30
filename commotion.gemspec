@@ -14,4 +14,6 @@ Gem::Specification.new do |gem|
   gem.name          = "commotion"
   gem.require_paths = ["lib"]
   gem.version       = Commotion::VERSION
+
+  gem.add_dependency "activerecord"
 end
