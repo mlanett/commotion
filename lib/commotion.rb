@@ -12,6 +12,7 @@ module Commotion
     autoload :BlockingQueue,  "commotion/concurrent/blocking_queue"
     autoload :HandoffQueue,   "commotion/concurrent/handoff_queue"
     autoload :Stepper,        "commotion/concurrent/stepper"
+    autoload :ThreadPool,     "commotion/concurrent/thread_pool"
   end
 
   class << self
