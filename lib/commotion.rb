@@ -5,6 +5,7 @@ module Commotion
 
   autoload :Action,         "commotion/action"
   autoload :Configuration,  "commotion/configuration"
+  autoload :Job,            "commotion/job"
 
   class << self
     def logger=(l)
