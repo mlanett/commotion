@@ -3,6 +3,7 @@ require "logger"
 
 module Commotion
 
+  autoload :Action,         "commotion/action"
   autoload :Configuration,  "commotion/configuration"
 
   class << self
