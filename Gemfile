@@ -15,4 +15,5 @@ end
 group :test do
   gem "mysql2"
   gem "simplecov",      require: false
+  gem "bson_ext"
 end

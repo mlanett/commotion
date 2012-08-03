@@ -1,5 +1,6 @@
 require "commotion"
 require "logger"
+require "mongo"
 
 =begin
 
@@ -16,15 +17,23 @@ c = Commotion::Configuration.new.evaluate ...
 
 class Commotion::Configuration
 
+  DEFAULT_MONGO = {
+    collection: "commotion",
+    database:   "test",
+    hosts:      [ "localhost:27017" ],
+    safe:       true
+  }
+
   attr :jobs
   # :after_forks
   # :logger
+  # :mongo
   # :workers
 
   def initialize
     @after_forks = []
     @jobs        = []
-    @logger      = Logger.new(STDERR)
+    @logger      = Logger.new("/tmp/scheduler.log", 1, 65536)
     @workers     = 10
   end
 
@@ -39,6 +48,20 @@ class Commotion::Configuration
       @logger = l
     else
       @logger
+    end
+  end
+
+  def mongo(m=nil)
+    if m then
+      # normalize input type (strings; don't symbolize uncontrolled input)
+      # create a db connection
+      m      = Hash[ m.map { |k,v| [ k.to_s, v ] } ]
+      h, p   = m["hosts"].sample.split(":")
+      d, s   = m["database"], m["safe"]
+      c      = m["collection"] or raise
+      @mongo = Mongo::Connection.new( h, p, safe: s ).db( d ).collection( c )
+    else
+      @mongo ||= mongo( DEFAULT_MONGO )
     end
   end
 

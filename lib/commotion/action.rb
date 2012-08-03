@@ -1,9 +1,6 @@
 require "commotion"
-require "active_record"
 
-class Commotion::Action < ActiveRecord::Base
-
-  self.table_name = "commotion_actions"
+class Commotion::Action
 
   # ref             int not null
   # kind            varchar(255) not null
@@ -12,11 +9,23 @@ class Commotion::Action < ActiveRecord::Base
 
   DELTA = 1000 # seconds
 
-  scope :kind,      ->( k ) { where( kind: k ) }
+  #
+  # Storage
+  #
 
-  scope :ready,     ->( t = Time.now ) { where( [ "at <= ?", t ] ).where( "lock_expiration is null" ).order(:at) }
-  scope :stale,     ->( t = Time.now ) { where( [ "lock_expiration <= ?", t ] ) }
-  scope :upcoming1, ->( t = Time.now ) { where( [ "? < at and at <= ?", t, t + DELTA ] ).where( "lock_expiration is null" ).order(:at).limit(1) }
+  class << self
+
+    def ready( kind, options = nil )
+      at = options[:at] || Time.now
+    end
+
+  end
+
+  #scope :kind,      ->( k ) { where( kind: k ) }
+
+  #scope :ready,     ->( t = Time.now ) { where( [ "at <= ?", t ] ).where( "lock_expiration is null" ).order(:at) }
+  #scope :stale,     ->( t = Time.now ) { where( [ "lock_expiration <= ?", t ] ) }
+  #scope :upcoming1, ->( t = Time.now ) { where( [ "? < at and at <= ?", t, t + DELTA ] ).where( "lock_expiration is null" ).order(:at).limit(1) }
 
   def to_s
     # [ kind, ref ].join("-")

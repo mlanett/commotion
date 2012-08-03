@@ -15,5 +15,6 @@ Gem::Specification.new do |gem|
   gem.require_paths = ["lib"]
   gem.version       = Commotion::VERSION
 
-  gem.add_dependency "activerecord"
+  gem.add_dependency "activesupport" # for slice
+  gem.add_dependency "mongo"
 end

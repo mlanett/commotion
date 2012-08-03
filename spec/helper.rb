@@ -4,14 +4,13 @@ require "bundler/setup"         # set up gem paths
 require "simplecov"             # code coverage
 SimpleCov.start                 # must be loaded before our own code
 require "commotion"             # load this gem
-require "active_record"
-require "commotion/test/active_record_helper"
+require "commotion/test/mongo_helper"
 require "commotion/concurrent/thread_helpers" if ENV["TRACE"]
 
 RSpec.configure do |spec|
-  include Commotion::Test::ActiveRecordHelper
-  spec.around( :each, mysql: true ) do |example|
-    with_clean_mysql do
+  include Commotion::Test::MongoHelper
+  spec.around( :each, storage: true ) do |example|
+    with_clean_mongo do
       example.run
     end
   end

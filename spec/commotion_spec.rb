@@ -12,7 +12,7 @@ class B < Commotion::Job
   end
 end
 
-describe Commotion, mysql: true do
+describe Commotion, storage: true do
 
   let(:configuration) do
     Commotion::Configuration.new.tap do |dsl_context|
