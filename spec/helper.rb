@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+
 require "bundler/setup"         # set up gem paths
 #require "ruby-debug"
 require "simplecov"             # code coverage

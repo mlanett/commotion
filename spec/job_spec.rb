@@ -72,25 +72,29 @@ describe Commotion::Job do
 
   describe "when finding actions", storage: true do
 
-    before do
+    before(:each) do
       A.schedule id: 1, at: now - 10
       A.schedule id: 2, at: now - 30
       A.schedule id: 3, at: now - 20
       A.schedule id: 4, at: now + 10
 
       B.schedule id: 1, area: 27, at: now - 30
-      B.schedule id: 1, area: 52, at: now - 30
+      B.schedule id: 1, area: 52, at: now - 30, locked: true
       B.schedule id: 2, area: 52, at: now - 10
       B.schedule id: 3, area: 52, at: now + 10
     end
 
     it "can find ready actions" do
       A.ready.size.should eq 3
-      B.ready.size.should eq 3
+      B.ready.size.should eq 2
     end
 
     it "finds the oldest action which is ready to run" do
       A.ready.first.id.should eq 2
+    end
+
+    it "does not find locked actions" do
+      B.ready.size.should eq 2
     end
 
     it "can find stale actions"

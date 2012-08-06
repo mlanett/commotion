@@ -55,7 +55,7 @@ class Commotion::Job
   # which is shorthand for 'at <= ...'
   # @param until_at defaults to Time.now
   # @returns documents sorted by scheduled time, earliest first.
-  def self.find( options = nil )
+  def self.find( options = {} )
     # canonicalize arguments as strings
     # until_at defaults to Time.now
 

@@ -14,6 +14,7 @@ end
 
 group :test do
   gem "mysql2"
+  #em "ruby-debug19",   require: false
   gem "simplecov",      require: false
   gem "bson_ext"
 end

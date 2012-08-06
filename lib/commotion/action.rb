@@ -25,6 +25,14 @@ class Commotion::Action
     super
   end
 
+  def to_s
+    @document.to_s
+  end
+
+  def inspect
+    to_s
+  end
+
   module DeadCode
 
   #
