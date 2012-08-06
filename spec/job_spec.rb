@@ -13,6 +13,9 @@ end
 
 describe Commotion::Job do
 
+  let(:now) { Time.now }
+  let(:b4) { now - 1 }
+
   describe "when it is not specifically configured" do
     it "has a default configuration" do
       A.configuration.should_not be_nil
@@ -30,8 +33,6 @@ describe Commotion::Job do
   end
 
   describe "when storing actions", storage: true do
-
-    let(:b4) { Time.now - 1 }
 
     it "can be scheduled" do
       expect { A.schedule id: 123 }.to raise_exception
@@ -71,21 +72,26 @@ describe Commotion::Job do
 
   describe "when finding actions", storage: true do
 
-    #it "can find ready actions" do
-    #  Commotion::Action.create kind: "B", ref: 1, at: Time.now - 30
-    #  Commotion::Action.create kind: "A", ref: 1, at: Time.now - 10
-    #  Commotion::Action.create kind: "A", ref: 2, at: Time.now - 30
-    #  Commotion::Action.create kind: "A", ref: 3, at: Time.now + 10
-    #  A.ready.size.should eq(2)
-    #end
+    before do
+      A.schedule id: 1, at: now - 10
+      A.schedule id: 2, at: now - 30
+      A.schedule id: 3, at: now - 20
+      A.schedule id: 4, at: now + 10
 
-    #it "finds the oldest action which is ready to run" do
-    #  Commotion::Action.create kind: "bar", ref: 1, at: Time.now - 30
-    #  Commotion::Action.create kind: "foo", ref: 1, at: Time.now - 10
-    #  Commotion::Action.create kind: "foo", ref: 2, at: Time.now - 30
-    #  Commotion::Action.create kind: "foo", ref: 3, at: Time.now - 20
-    #  Commotion::Action.kind("foo").ready.first.ref.should eq(2)
-    #end
+      B.schedule id: 1, area: 27, at: now - 30
+      B.schedule id: 1, area: 52, at: now - 30
+      B.schedule id: 2, area: 52, at: now - 10
+      B.schedule id: 3, area: 52, at: now + 10
+    end
+
+    it "can find ready actions" do
+      A.ready.size.should eq 3
+      B.ready.size.should eq 3
+    end
+
+    it "finds the oldest action which is ready to run" do
+      A.ready.first.id.should eq 2
+    end
 
     it "can find stale actions"
     it "can find an upcoming actions"

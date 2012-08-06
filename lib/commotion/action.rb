@@ -2,34 +2,38 @@ require "commotion"
 
 class Commotion::Action
 
-  # ref             int not null
+  include Commotion
+  include Utilities
+
+  # id              int not null
   # kind            varchar(255) not null
   # at              timestamp not null
   # lock_expiration timestamp
 
   DELTA = 1000 # seconds
 
+  def initialize( document )
+    @document = symbolize(document)
+  end
+
+  def method_missing( key, *arguments )
+    if key =~ /^(.*)=$/ then
+      return @document[ $1.to_sym ] = arguments.first if arguments.size == 1
+    else
+      return @document[key] if arguments.size == 0
+    end
+    super
+  end
+
+  module DeadCode
+
   #
   # Storage
   #
 
-  class << self
-
-    def ready( kind, options = nil )
-      at = options[:at] || Time.now
-    end
-
-  end
-
-  #scope :kind,      ->( k ) { where( kind: k ) }
-
-  #scope :ready,     ->( t = Time.now ) { where( [ "at <= ?", t ] ).where( "lock_expiration is null" ).order(:at) }
-  #scope :stale,     ->( t = Time.now ) { where( [ "lock_expiration <= ?", t ] ) }
-  #scope :upcoming1, ->( t = Time.now ) { where( [ "? < at and at <= ?", t, t + DELTA ] ).where( "lock_expiration is null" ).order(:at).limit(1) }
-
   def to_s
-    # [ kind, ref ].join("-")
-    "#{kind}-#{ref}"
+    # [ kind, id ].join("-")
+    "#{kind}-#{id}"
   end
 
   # All these methods below are hacky because AR doesn't support compound keys.
@@ -54,16 +58,13 @@ class Commotion::Action
 
   def advance
     with_connection_lock do |locked_self|
-      #
     end
   end
 
   def reschedule( future )
-    row.update_all at: future
   end
 
   def delete
-    row.delete_all
   end
 
   def unexpire
@@ -76,16 +77,12 @@ class Commotion::Action
 
   protected
 
-  # ActiveRecord relation to find this row
-  # hack required because we have a compound primary key - unsupported by ActiveRecord
-  def row
-    self.class.where( ref: ref, kind: kind )
-  end
-
   def with_connection_lock # block(locked_self)
     transaction do
       yield(row.lock.first)
     end
   end
+
+  end # dead
 
 end

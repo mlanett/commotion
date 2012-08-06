@@ -43,6 +43,9 @@ module Commotion
     def stringify(h)
       Hash[ h.map { |k,v| [ k.to_s, v ] } ]
     end
+    def symbolize(h)
+      Hash[ h.map { |k,v| [ k.to_sym, v ] } ]
+    end
   end
 
   extend Configurable

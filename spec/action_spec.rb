@@ -1,9 +1,14 @@
 require "helper"
+include Commotion
 
-describe Commotion::Action, storage: true do
+describe Action, storage: true do
 
-  it "finds the oldest one which needs to run"
-
-  it "can be locked"
+  it "can represent a document" do
+    a = Action.new :user => 4, "name" => "Mark"
+    a.user.should eq 4
+    a.name.should eq "Mark"
+    expect { a.area = 52 }.to_not raise_exception
+    a.area.should eq 52
+  end
 
 end
