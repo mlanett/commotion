@@ -37,32 +37,39 @@ class Commotion::Job
   # Scheduling jobs
   #
 
-  def self.schedule( vals = {} )
+  def self.schedule( options = {} )
     # canonicalize arguments as strings
     # ensure we have a timestamp
-    # build proper id
+    # build proper id (e.g. [ kind, at, id, account ])
     # non-key values are also saved
 
-    vals = stringify(vals)
-    at   = vals["at"] or raise MissingAtTime
-    id   = vals.slice(*key).merge( "at" => at, "kind" => kind )
-    raise( MissingKeys, key ) if id.size != key.size + 2
+    options = stringify(options)
+    at      = options["at"] or raise MissingAtTime
+    id      = options.slice(*key).merge( "at" => at, "kind" => kind )
+    raise( MissingKeys, key.join(",") ) if id.size != key.size + 2
 
-    configuration.mongo.update( id, vals.merge(id), upsert: true )
+    configuration.mongo.update( id, options.merge(id), upsert: true )
   end
 
-  # All options are standard mongo options, except for until_at,
-  # which is shorthand for 'at <= ...'
-  # @param until_at defaults to Time.now
+  # All options are standard mongo options, except for "at",
+  # which if given, and if simple, is shorthand for 'at <= ...'
+  # @param at defaults to Time.now
   # @returns documents sorted by scheduled time, earliest first.
   def self.find( options = {} )
     # canonicalize arguments as strings
-    # until_at defaults to Time.now
+    # at defaults to Time.now
 
-    options  = stringify(options)
-    until_at = options["until_at"] || Time.now
-    query    = { "at" => { "$lt" => until_at }, "kind" => kind }.merge options
+    options = stringify(options)
+    case at = options.delete("at")
+    when nil
+      at = { "$lte" => Time.now }
+    when Hash
+      # Ok
+    else
+      at = { "$lte" => at }
+    end
 
+    query = { "at" => at, "kind" => kind }.merge( options )
     result = configuration.mongo.find({ "$query" => query, "$orderby" => { "at" => 1 } })
     result = result.limit(1) if false
     result.map do |d|
@@ -80,19 +87,20 @@ class Commotion::Job
   # Finds documents of this kind, locked, with timestamp <= now.
   # @see find()
   def self.stale( options = {} )
-    options  = stringify(options)
-    until_at = options["until_at"] || Time.now
+    options = stringify(options)
+    at      = options["at"] || Time.now
 
-    find( options.merge( "locked" => { "$lt" => until_at } ) )
+    find( options.merge( "at" => at, "locked" => { "$lt" => at } ) )
   end
 
   # Finds documents which are NOT ready, but will be in another minute.
+  # @param at is the *starting* point for the time interval.
   # @returns the first document only.
-  def self.upcoming1( options = nil )
-    options  = stringify(options)
-    after_at = options["after_at"] || Time.now
+  def self.upcoming1( options = {} )
+    options = stringify(options)
+    at      = options["at"] || Time.now
 
-    find( "after_at" => after_at, "until_at" => after_at + 60, "locked" => nil, "limit" => 1 ).first
+    find( "at" => { "$gt" => at, "$lte" => at + 60 }, "locked" => nil ).first
   end
 
   #

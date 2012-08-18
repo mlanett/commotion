@@ -44,11 +44,7 @@ class Commotion::Configuration
   end
 
   def logger(l=nil)
-    if l then
-      @logger = l
-    else
-      @logger
-    end
+    l and @logger = l or @logger
   end
 
   def mongo(m=nil)
@@ -56,9 +52,9 @@ class Commotion::Configuration
       # normalize input type (strings; don't symbolize uncontrolled input)
       # create a db connection
       m      = Hash[ m.map { |k,v| [ k.to_s, v ] } ]
-      h, p   = m["hosts"].sample.split(":")
-      d, s   = m["database"], m["safe"]
-      c      = m["collection"] or raise
+      h, p   = m["hosts"] ? m["hosts"].sample.split(":") : [ "localhost", 27017 ]
+      d, s   = m["database"] || "test", !! m["safe"]
+      c      = m["collection"] || "schedule"
       @mongo = Mongo::Connection.new( h, p, safe: s ).db( d ).collection( c )
     else
       @mongo ||= mongo( DEFAULT_MONGO )
@@ -70,11 +66,11 @@ class Commotion::Configuration
   end
 
   def workers(n=nil)
-    if n then
-      @workers = n
-    else
-      @workers
-    end
+    n and @workers = n or @workers
+  end
+
+  def jobs
+    @jobs.dup
   end
 
 end

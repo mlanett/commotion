@@ -3,7 +3,7 @@ include Commotion
 
 describe Action, storage: true do
 
-  it "can represent a document" do
+  it "can represent a collection of values" do
     a = Action.new :user => 4, "name" => "Mark"
     a.user.should eq 4
     a.name.should eq "Mark"
