@@ -17,6 +17,8 @@ require "active_support/core_ext/hash/slice"
 =end
 class Commotion::Job
   include Commotion
+  include Utilities
+  extend Utilities
 
   #
   # Configuration
@@ -65,7 +67,7 @@ class Commotion::Job
       at = { "$lte" => Time.now }
     when Hash
       # Ok
-    else
+    else # (simple)
       at = { "$lte" => at }
     end
 
@@ -94,13 +96,11 @@ class Commotion::Job
   end
 
   # Finds documents which are NOT ready, but will be in another minute.
-  # @param at is the *starting* point for the time interval.
-  # @returns the first document only.
-  def self.upcoming1( options = {} )
-    options = stringify(options)
-    at      = options["at"] || Time.now
-
-    find( "at" => { "$gt" => at, "$lte" => at + 60 }, "locked" => nil ).first
+  # @param at is the *ending* point for the time interval.
+  # @returns the first document’s at time only.
+  def self.next_ready_at( at = Time.now + 60, options = {} )
+    doc = find( options.merge at: { "$lte" => at }, locked: nil ).first
+    doc && doc.at
   end
 
   #
@@ -124,13 +124,12 @@ class Commotion::Job
   #
 
   def perform( action )
-    puts action.to_s
+    # no-op
   end
 
+  # ----------------------------------------------------------------------------
   protected
-
-  include Utilities
-  extend Utilities
+  # ----------------------------------------------------------------------------
 
   def configuration
     self.class.configuration

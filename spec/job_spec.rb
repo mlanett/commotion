@@ -2,19 +2,18 @@ require "helper"
 require "timecop"
 
 class JobA < Commotion::Job
-  def perform( action )
-  end
 end
 
 class JobB < Commotion::Job
   key "id", "area"
-  def perform( action )
-  end
+end
+
+class JobC < Commotion::Job
 end
 
 describe Commotion::Job do
 
-  let(:now) { Time.now }
+  let(:now) { Time.parse "2001-01-01 08:00:00 -0800" }
   let(:b4) { now - 1 }
   before(:each) { Timecop.freeze(now) }
 
@@ -85,6 +84,8 @@ describe Commotion::Job do
       JobB.schedule id: 2, area: 52, at: now - 10
       JobB.schedule id: 3, area: 52, at: now + 10
       JobB.schedule id: 6, area: 27, at: now - 100, locked: now - 10
+
+      JobC.schedule id: 4, at: now + 10
     end
 
     it "can find ready actions" do
@@ -106,8 +107,7 @@ describe Commotion::Job do
     end
 
     it "can find an upcoming action" do
-      JobA.upcoming1.should_not be_nil
-      JobA.upcoming1.id.should eq 4
+      JobC.next_ready_at.should == now + 10
     end
 
   end

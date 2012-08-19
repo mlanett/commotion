@@ -73,10 +73,10 @@ class Commotion::Scheduler
     idle = true
     wake = now + 60
     jobs.each do |job|
-      njob = job.upcoming1(at: now)
-      if njob && njob.at < wake then
+      nat = job.next_ready_at(wake)
+      if nat && nat < wake then
         idle = false
-        wake = njob.at
+        wake = nat
       end
     end
 
