@@ -2,6 +2,11 @@ require "commotion"
 
 class Commotion::Scheduler
 
+  class UnknownJob < Exception
+  end
+
+  include Commotion
+
   BATCH = 20
 
   attr :configuration
@@ -9,7 +14,42 @@ class Commotion::Scheduler
   def initialize( configuration )
     @configuration = configuration
     @running       = []
+    @map           = configuration.jobs.inject({}) do |a,i|
+      raise( UnknownJob, i.inspect ) unless i.respond_to? :schedule
+      a[i.to_s] = i
+      a
+    end
   end
+
+  def schedule( kind, options = {} )
+    kind = kind.to_s
+    job  = @map[kind] or raise( UnknownJob, kind )
+    job.schedule( options )
+  end
+
+  def run
+    check
+    clear_stale_actions
+    next_run
+  end
+
+  def check
+    # scheduled
+    @map.values.each do |job|
+      actions = job.ready
+      actions.each do |action|
+        perform( job, action )
+      end
+    end
+  end
+
+  # @returns when all jobs are complete and all workers are idle
+  def wait
+  end
+
+  # ----------------------------------------------------------------------------
+  protected
+  # ----------------------------------------------------------------------------
 
   def perform( job, action )
     # wait until we can get a process
@@ -19,42 +59,48 @@ class Commotion::Scheduler
     # reset the action forward
   end
 
-  def run( now = Time.now )
-    clear_stale_actions( now )
-
-    # scheduled
-    configuration.jobs.each do |job|
-      Commotion::Action.kind( job.kind ).ready( now ).each { |a| perform( job, a ) }
-    end
-
-    sleep_until_next_action( now )
-  end
-
-  def clear_stale_actions( now = Time.now )
-    configuration.jobs.each do |job|
-      job.stale( now ).each do |a|
+  def clear_stale_actions
+    @map.values.each do |job|
+      job.stale.each do |a|
         a.unexpire
-        configuration.logger.warn "Cleared #{a}"
+        logger.warn "Cleared #{a}"
       end
     end
   end
 
-  def schedule( kind, ref, at )
-    Commotion::Action.kind(kind).where( ref: ref ).first_or_create
+  def next_run( now = Time.now )
+    # TODO try to do fewer queries; ideally just 1. However not easy with multiple collections.
+    idle = true
+    wake = now + 60
+    jobs.each do |job|
+      njob = job.upcoming1(at: now)
+      if njob && njob.at < wake then
+        idle = false
+        wake = njob.at
+      end
+    end
+
+    wake
   end
 
-  def sleep_until_next_action( now )
-    kinds = configuration.jobs.map { |job| job.kind }
-    next1 = Commotion::Action.where( kind: kinds ).upcoming1( now ).first
-    wake  = [ next1 && next1.at, now + 1.minute ].compact.min
-    configuration.logger.debug "Sleeping until #{wake}"
-    sleep_until( wake )
-  end
+  # ----------------------------------------------------------------------------
+  private
+  # ----------------------------------------------------------------------------
 
   def sleep_until( future )
-    while (t = Time.now) < future
-      sleep( ( future - t ) / 2 )
+    logger.debug "Sleeping until #{wake}"
+    # don't overshoot the target time
+    while (t = future - Time.now) > 0
+      sleep t/2
     end
+  end
+
+  def jobs
+    @jobs ||= @configuration.jobs
+  end
+
+  def logger
+    @logger ||= @configuration.logger
   end
 
 end
