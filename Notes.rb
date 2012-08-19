@@ -10,14 +10,14 @@ end
 class SchedulePost < Job
 end
 
-schedule :moderation, ModeratePage
-schedule :page_insights, PageInsights
-schedule :publishing, SchedulePost
+schedule YouHaveMail
+schedule InvitesAccepted
+schedule DailySales
 
 loop do
-  next_wake = [ next_action, Time.now + 1.minute ].compact.min
+  next_wake = [ next_run, Time.now + 1.minute ].compact.min
   sleep_until next_wake
-  next_actions = job.upcoming1
+  next_runs = job.next_ready_time_by
 end
 
 loop do
