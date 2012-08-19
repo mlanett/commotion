@@ -21,6 +21,4 @@ describe Commotion::Concurrent::Stepper do
     at.should eq(9)
   end
 
-  it "can advance with more flexible dependencies"
-
 end
