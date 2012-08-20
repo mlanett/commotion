@@ -18,8 +18,9 @@ describe Commotion::Job do
   before(:each) { Timecop.freeze(now) }
 
   describe "when it is not specifically configured" do
+    before { Commotion.configuration = Commotion::Configuration.new.tap { |c| c.workers 3 } }
     it "has a default configuration" do
-      JobA.configuration.should_not be_nil
+      JobA.configuration.workers.should eq 3
     end
   end
 

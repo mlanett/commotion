@@ -16,9 +16,20 @@ require "active_support/core_ext/hash/slice"
 
 =end
 class Commotion::Job
+
+  class MissingAtTime < StandardError
+  end
+
+  class MissingKeys < StandardError
+  end
+
   include Commotion
   include Utilities
   extend Utilities
+
+  # ----------------------------------------------------------------------------
+  # Configuration, Scheduling, Finding
+  # ----------------------------------------------------------------------------
 
   #
   # Configuration
@@ -27,12 +38,16 @@ class Commotion::Job
   def self.configuration
     # Inherit the value on demand
     @configuration ||= begin
-      self == Job ? Configuration.new : self.superclass.configuration
+      self == Job ? Commotion.configuration : self.superclass.configuration
     end
   end
 
   def self.configuration=(c)
     @configuration = c
+  end
+
+  def configuration
+    @configuration ||= self.class.configuration
   end
 
   #
@@ -131,14 +146,9 @@ class Commotion::Job
   protected
   # ----------------------------------------------------------------------------
 
-  def configuration
-    self.class.configuration
+
   end
 
-  class MissingAtTime < StandardError
-  end
-
-  class MissingKeys < StandardError
   end
 
 end
