@@ -27,8 +27,8 @@ describe Commotion::Concurrent::BlockingQueue do
   it "can push and pop a lot" do
     total = 0
     Commotion::Concurrent::Stepper.new do |s|
-      s.add( after: 0 ) { (1..10).each { |i| subject.push i; sleep rand } }
-      s.add( after: 0 ) { total = (1..10).inject(0) { |a,i| sleep rand; a + subject.pop } }
+      s.add( after: 0 ) { (1..10).each { |i| subject.push i; sleep rand*0.1 } }
+      s.add( after: 0 ) { total = (1..10).inject(0) { |a,i| sleep rand*0.1; a + subject.pop } }
     end.run
     total.should eq 55
   end
