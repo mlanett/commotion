@@ -108,7 +108,7 @@ describe Commotion::Job do
     end
 
     it "can find an upcoming action" do
-      JobC.next_ready_at.should == now + 10
+      JobC.next_ready_time_by( now + 20 ).should == now + 10
     end
 
   end # finding

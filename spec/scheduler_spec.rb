@@ -59,9 +59,9 @@ describe Commotion::Scheduler, storage: true do
   it "determines when the next job will run" do
     scheduler.schedule ScheduledJob, id: 1, at: now + 10
     scheduler.schedule ScheduledJob, id: 2, at: now + 11
-    scheduler.__send__(:next_run).should eq(now + 10)
+    scheduler.__send__(:next_before,now+20).should eq(now + 10)
     Timecop.freeze(10)
-    scheduler.__send__(:next_run).should eq(Time.now)
+    scheduler.__send__(:next_before,now+20).should eq(Time.now)
   end
 
   it "runs multiple small tasks at once" do
@@ -74,7 +74,11 @@ describe Commotion::Scheduler, storage: true do
     ScheduledJob.performances.should eq(2)
   end
 
-  it "finds expired jobs and clears them"
+  it "finds expired jobs and clears them" do
+    scheduler.schedule ScheduledJob, id: 1, at: Time.now, locked: Time.now - 1
+    scheduler.run
+  end
+
   it "runs jobs with a lock"
 
 end

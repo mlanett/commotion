@@ -57,13 +57,8 @@ class Commotion::Job
   # Configuration, Scheduling, Finding
   # ----------------------------------------------------------------------------
 
-  def self.lock_time(t=nil)
-    t and @lock_time = t or (@lock_time ||= 1000)
-  end
-
-  def lock_time
-    self.class.lock_time
-  end
+  include DefaultedAttributes
+  accessor_with_default(:lock_time) { 1000 }
 
   #
   # Configuration
@@ -146,10 +141,10 @@ class Commotion::Job
 
   # Finds documents which are NOT ready, but will be in another minute.
   # @param at is the *ending* point for the time interval.
-  # @returns the first document’s at time only.
-  def self.next_ready_at( at = Time.now + 60, options = {} )
+  # @returns the first document’s at time only, or the given at time.
+  def self.next_ready_time_by( at, options = {} )
     doc = find( options.merge at: { "$lte" => at }, locked: nil ).first
-    doc && doc.at
+    doc && doc.at || at
   end
 
   # ----------------------------------------------------------------------------

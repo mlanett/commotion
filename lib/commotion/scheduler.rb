@@ -8,17 +8,15 @@ class Commotion::Scheduler
   include Commotion
 
   BATCH = 20
+  SLEEP = 60
 
   attr :configuration
 
   def initialize( configuration )
     @configuration = configuration
     @running       = []
-    @map           = configuration.jobs.inject({}) do |a,i|
-      raise( UnknownJob, i.inspect ) unless i.respond_to? :schedule
-      a[i.to_s] = i
-      a
-    end
+    @runnable      = true
+    @map           = configuration.jobs.inject({}) { |a,kind| a[kind.to_s] = check_kind(kind); a }
   end
 
   def schedule( kind, options = {} )
@@ -27,15 +25,31 @@ class Commotion::Scheduler
     job.schedule( options )
   end
 
+  # @param block must return a Time or nil
+  # @returns when state == :stop
+  def loop_with_sleep( &block )
+    loop do
+      wake = nil
+      begin
+        wake = block.call
+      rescue => x
+        logger.warn warning: "Loop iteration failed", error: x.inspect
+      end
+      wake = [ wake, Time.now + SLEEP ].compact.min
+      break if ! @runnable
+      sleep_until wake
+    end
+  end
+
   def run
     check
     clear_stale_actions
-    next_run
+    return next_before( Time.now + SLEEP )
   end
 
   def check
     # scheduled
-    @map.values.each do |job|
+    jobs.each do |job|
       actions = job.ready
       actions.each do |action|
         perform( job, action )
@@ -57,40 +71,35 @@ class Commotion::Scheduler
     # fork
     # run it
     job = kind.new( action )
-    job.perform
+    job.with_lock { job.perform }
     # reset the action forward
   end
 
   def clear_stale_actions
-    @map.values.each do |job|
+    jobs.each do |job|
       job.stale.each do |a|
         a.unexpire
-        logger.warn "Cleared #{a}"
+        logger.warn warning: "Cleared action with expired log", action: a.to_s
       end
     end
   end
 
-  def next_run( now = Time.now )
+  def next_before( by )
     # TODO try to do fewer queries; ideally just 1. However not easy with multiple collections.
-    idle = true
-    wake = now + 60
-    jobs.each do |job|
-      nat = job.next_ready_at(wake)
-      if nat && nat < wake then
-        idle = false
-        wake = nat
-      end
-    end
-
-    wake
+    wake = jobs.map { |job| job.next_ready_time_by(by) }.min
   end
 
   # ----------------------------------------------------------------------------
   private
   # ----------------------------------------------------------------------------
 
+  def check_kind(kind)
+    raise( UnknownJob, kind.inspect ) unless kind.respond_to?(:schedule)
+    kind
+  end
+
   def sleep_until( future )
-    logger.debug "Sleeping until #{wake}"
+    logger.debug trace: "Sleeping until #{wake}"
     # don't overshoot the target time
     while (t = future - Time.now) > 0
       sleep t/2

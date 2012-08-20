@@ -48,6 +48,23 @@ module Commotion
     end
   end
 
+  module DefaultedAttributes
+    def self.included(base)
+      self.class.send(:define_method,"accessor_with_default") do |name,&default|
+        ivar = "@#{name}".to_sym
+        # getter or setter
+        base.send(:define_method,"#{name}".to_sym) do
+          instance_variable_set(ivar,default.call) if ! instance_variable_defined?(ivar) && default
+          instance_variable_get(ivar)
+        end
+        # setter
+        base.send(:define_method,"#{name}=".to_sym) do |value|
+          instance_variable_set(ivar,value)
+        end
+      end
+    end
+  end
+
   extend Configurable
   extend Loggable
 
