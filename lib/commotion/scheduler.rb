@@ -45,17 +45,19 @@ class Commotion::Scheduler
 
   # @returns when all jobs are complete and all workers are idle
   def wait
+    # TODO spec me
   end
 
   # ----------------------------------------------------------------------------
   protected
   # ----------------------------------------------------------------------------
 
-  def perform( job, action )
+  def perform( kind, action )
     # wait until we can get a process
     # fork
     # run it
-    job.new( self ).perform( action )
+    job = kind.new( action )
+    job.perform
     # reset the action forward
   end
 

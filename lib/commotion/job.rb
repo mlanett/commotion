@@ -17,19 +17,53 @@ require "active_support/core_ext/hash/slice"
 =end
 class Commotion::Job
 
-  class MissingAtTime < StandardError
+  class MissingAtTime < Exception
   end
 
-  class MissingKeys < StandardError
+  class MissingKeys < Exception
+  end
+
+  class Locked < StandardError
   end
 
   include Commotion
   include Utilities
   extend Utilities
 
+  attr :action
+
+  # ----------------------------------------------------------------------------
+  # Processing jobs
+  # ----------------------------------------------------------------------------
+
+  def initialize( action )
+    @action = action
+  end
+
+  def perform
+    # no-op
+  end
+
+  # @see http://www.mongodb.org/display/DOCS/findAndModify+Command
+  def with_lock( lock_until = Time.now + lock_time, &block )
+    doc = configuration.mongo.find_and_modify( query: { _id: @action._id, locked: nil } , update: { "$set" => { locked: lock_until } }, new: true )
+    raise Locked if doc["locked"] == nil
+    block.call
+  ensure
+    doc = configuration.mongo.find_and_modify( query: { _id: @action._id } , update: { "$set" => { locked: nil } } )
+  end
+
   # ----------------------------------------------------------------------------
   # Configuration, Scheduling, Finding
   # ----------------------------------------------------------------------------
+
+  def self.lock_time(t=nil)
+    t and @lock_time = t or (@lock_time ||= 1000)
+  end
+
+  def lock_time
+    self.class.lock_time
+  end
 
   #
   # Configuration
@@ -118,6 +152,10 @@ class Commotion::Job
     doc && doc.at
   end
 
+  # ----------------------------------------------------------------------------
+  protected
+  # ----------------------------------------------------------------------------
+
   #
   # Storage
   #
@@ -132,23 +170,6 @@ class Commotion::Job
 
   def self.kind
     self.name
-  end
-
-  #
-  # Processing jobs
-  #
-
-  def perform( action )
-    # no-op
-  end
-
-  # ----------------------------------------------------------------------------
-  protected
-  # ----------------------------------------------------------------------------
-
-
-  end
-
   end
 
 end

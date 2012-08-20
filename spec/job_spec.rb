@@ -31,7 +31,7 @@ describe Commotion::Job do
 
   it "can be performed" do
     job = JobA.new(nil)
-    expect { job.perform(:a) }.to_not raise_error
+    expect { job.perform }.to_not raise_error
   end
 
   describe "when storing actions", storage: true do
@@ -111,6 +111,32 @@ describe Commotion::Job do
       JobC.next_ready_at.should == now + 10
     end
 
-  end
+  end # finding
+
+  describe "when locking actions" do
+
+    before(:each) do
+      JobA.schedule id: 1, at: now
+      JobA.schedule id: 2, at: now - 30
+    end
+
+    it "can lock an action and keep it out of ready" do
+      doc  = JobA.ready.first
+      JobA.ready.size.should eq 2
+      JobA.ready.first.id.should eq 2
+      JobA.new(doc).with_lock do
+        JobA.ready.size.should eq 1
+        JobA.ready.first.id.should eq 1
+      end
+    end
+
+    it "can keep an action from being locked twice" do
+      doc = JobA.ready.first
+      JobA.new(doc).with_lock do
+        expect { JobA.new(doc).with_lock }.to raise_exception
+      end
+    end
+
+  end # locking
 
 end

@@ -5,7 +5,7 @@ class ScheduledJob < Commotion::Job
   class << self
     attr_accessor :performances
   end
-  def perform( action )
+  def perform
     self.class.performances += 1
   end
 end
@@ -56,9 +56,6 @@ describe Commotion::Scheduler, storage: true do
     ScheduledJob.performances.should eq(2)
   end
 
-  it "finds expired jobs and clears them"
-  it "runs jobs with a lock"
-
   it "determines when the next job will run" do
     scheduler.schedule ScheduledJob, id: 1, at: now + 10
     scheduler.schedule ScheduledJob, id: 2, at: now + 11
@@ -76,5 +73,8 @@ describe Commotion::Scheduler, storage: true do
     s.wait
     ScheduledJob.performances.should eq(2)
   end
+
+  it "finds expired jobs and clears them"
+  it "runs jobs with a lock"
 
 end
