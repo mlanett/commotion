@@ -8,7 +8,7 @@ doc/
 Gemfile.lock
 InstalledFiles
 lib/bundler/man
-log
+log/*.log
 pkg
 rdoc
 spec/reports
