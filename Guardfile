@@ -1,3 +1,5 @@
+notification :terminal_notifier
+
 guard "bundler" do
   watch("Gemfile")
   watch(/\.gemspec$/)

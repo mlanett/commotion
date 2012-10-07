@@ -10,6 +10,7 @@ group :development, :test do
   gem "rb-fsevent"      # for guard
   gem "rspec"
   gem "ruby_gntp"       # for guard
+  gem "terminal-notifier-guard"
 end
 
 group :test do
